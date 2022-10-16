@@ -3,7 +3,7 @@ import { StyleSheet, Text, TextInput, View, Pressable, TouchableOpacity, ImageBa
 import BackgroundImage from '../img/massoutychat.png';
 
 import { signInAnonymously } from "firebase/auth";
-import { auth } from '../config/firebase';
+import { auth } from './config/firebase';
 
 import NetInfo from '@react-native-community/netinfo';
 
