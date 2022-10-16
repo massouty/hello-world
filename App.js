@@ -1,53 +1,77 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState, createContext, useContext, useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 
-export default function App() {
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './config/firebase';
+
+// import the screens
+import Start from './components/Start';
+import Chat from './components/Chat';
+
+// import react native gesture handler
+import 'react-native-gesture-handler';
+
+// import react Navigation
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+
+// Create the navigator
+const Stack = createStackNavigator();
+
+// Create a contect for the user data
+const AuthenticatedUserContext = createContext({});
+
+// Create a Provider function to allow screen components to acces the current user
+const AuthenticatedUserProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+
   return (
-    <View style={styles.container}>
-        <View style={styles.box1}>
-        <Text  style={styles.line1}>HALLO WORLD</Text>
-        </View>
-        <View style={styles.box2}>
-        <Text  style={styles.line2}>HALLO WORLD</Text>
-        <Text  style={[styles.line1,styles.line3]}>HALLO WORLD</Text>
-        </View>
-      <StatusBar style="auto" />
-    </View>
+    <AuthenticatedUserContext.Provider value={{ user, setUser }}>
+      {children}
+    </AuthenticatedUserContext.Provider>
+  )
+}
+
+function RootNavigator() {
+  const { user, setUser } = useContext(AuthenticatedUserContext);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // onAuthStateChanges returns an unsubscriber
+    const unsubscribeAuth = onAuthStateChanged(
+      auth,
+      async authenticatedUser => {
+        authenticatedUser ? setUser(authenticatedUser) : setUser(null);
+        setIsLoading(false);
+      }
+    );
+
+    // unsubscribe auth listener to unmount
+    return unsubscribeAuth;
+  }, [user]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size='large' />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName='Start'>
+        <Stack.Screen name='Chat' component={Chat} />
+        <Stack.Screen name='Start' component={Start} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'lightGray',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  line1:{
-    color:'blue',
-    fontSize:24,
-    fontWeight:300
-  },
-   line2:{
-    color:'red',
-    fontSize:35,
-    fontWeight:400
-  },
-line3:{
-    color:'red',
-    fontSize:40,
-    fontWeight:600
-  },
-  box1:{
-    hight:100,
-    width:100,
-    backgroundColor:'yellow'
-  },
-   box2:{
-    hight:200,
-    width:200,
-    backgroundColor:'blue'
-  },
-
-
-});
+export default function App() {
+  return (
+    <AuthenticatedUserProvider>
+      <RootNavigator />
+    </AuthenticatedUserProvider>
+  );
+}
