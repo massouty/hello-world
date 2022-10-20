@@ -18,7 +18,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 // Create the navigator
 const Stack = createStackNavigator();
 
-// Create a contect for the user data
+// Create a contact for the user data
 const AuthenticatedUserContext = createContext({});
 
 // Create a Provider function to allow screen components to acces the current user
